@@ -112,7 +112,7 @@ def validate_config(cfg: Config) -> list[str]:
     if not cfg.pagermon_base_url.startswith(("http://", "https://")):
         errors.append("PAGERMON_BASE_URL must start with http:// or https://")
 
-    if not cfg.pagermon_api_key or cfg.pagermon_api_key == "replace_me":
+    if not cfg.dry_run and (not cfg.pagermon_api_key or cfg.pagermon_api_key == "replace_me"):
         errors.append("PAGERMON_API_KEY must be set to a real API key")
 
     if not cfg.pagermon_address:

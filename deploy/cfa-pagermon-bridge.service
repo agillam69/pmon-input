@@ -1,0 +1,24 @@
+[Unit]
+Description=CFA State Incidents to PagerMon Bridge
+Documentation=https://github.com/agillam69/pmon-input
+After=network.target pagermon.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pagermon
+Group=pagermon
+WorkingDirectory=/opt/cfa-pagermon-bridge
+EnvironmentFile=-/etc/cfa-pagermon-bridge/bridge.env
+ExecStart=/opt/cfa-pagermon-bridge/.venv/bin/python -m src.cfa_pagermon_bridge.main --env-file /etc/cfa-pagermon-bridge/bridge.env
+Restart=on-failure
+RestartSec=10s
+
+# Security Hardening
+ProtectSystem=full
+ProtectHome=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/cfa-pagermon-bridge
+
+[Install]
+WantedBy=multi-user.target
