@@ -95,60 +95,73 @@ Configuration is loaded from environment variables or a `.env` file.
 
 ## Installation & Setup
 
-### 1. Windows (using PM2)
+### 1. Quick install with PM2 (Windows)
 
-1. **Clone repository and create virtual environment:**
-   ```powershell
-   cd "pmon-input"
-   python -m venv .venv
-   .\.venv\Scripts\python.exe -m pip install --upgrade pip
-   .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-   ```
+```powershell
+git clone https://github.com/agillam69/pmon-input.git
+Set-Location pmon-input
+.\scripts\install.ps1
+```
 
-2. **Configure environment:**
-   ```powershell
-   Copy-Item .env.example .env
-   # Edit .env and insert your real PAGERMON_API_KEY
-   ```
+The installer creates `.env` from `.env.example` in **dry-run** mode, starts the bridge under PM2, and saves the process list. The PM2 process is named **`bridge`**.
 
-3. **Verify with test suite & check mode:**
-   ```powershell
-   .\.venv\Scripts\pytest.exe -v
-   .\.venv\Scripts\python.exe -m src.cfa_pagermon_bridge.main --check
-   ```
+After install:
+- Set your `PAGERMON_API_KEY` in `.env` or via the web UI at `http://<host>:8585`
+- Restart the bridge: `pm2 restart bridge`
 
-4. **Start with PM2:**
-   ```powershell
-   pm2 start ecosystem.config.js
-   pm2 save
-   ```
+### 2. Quick install with PM2 (Linux)
 
-5. **Check logs & status:**
-   ```powershell
-   pm2 status
-   pm2 logs bridge
-   ```
+```bash
+git clone https://github.com/agillam69/pmon-input.git
+cd pmon-input
+chmod +x scripts/install-pm2.sh
+./scripts/install-pm2.sh
+```
+
+The PM2 process is named **`bridge`**. Manage it with:
+
+```bash
+pm2 status
+pm2 logs bridge
+pm2 restart bridge
+pm2 stop bridge
+```
+
+### 3. Linux (systemd) alternative
+
+```bash
+chmod +x scripts/install.sh
+sudo ./scripts/install.sh
+sudo systemctl enable --now cfa-pagermon-bridge
+```
 
 ---
 
-### 2. Linux (using systemd)
+## Updating via Git Sync
 
-1. **Run automated installer:**
-   ```bash
-   chmod +x scripts/install.sh
-   sudo ./scripts/install.sh
-   ```
+To pull the latest version and restart:
 
-2. **Configure environment:**
-   ```bash
-   sudo nano /etc/cfa-pagermon-bridge/bridge.env
-   ```
+```bash
+cd pmon-input
+git pull
 
-3. **Start systemd service:**
-   ```bash
-   sudo systemctl enable --now cfa-pagermon-bridge
-   sudo systemctl status cfa-pagermon-bridge
-   ```
+# If requirements changed, update the venv
+.venv/bin/pip install -r requirements.txt
+
+# Restart the PM2 process
+pm2 restart bridge
+pm2 save
+```
+
+On Windows:
+
+```powershell
+Set-Location pmon-input
+git pull
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+pm2 restart bridge
+pm2 save
+```
 
 ---
 
