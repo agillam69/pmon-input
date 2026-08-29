@@ -4,6 +4,29 @@ A reliable, lightweight Python bridge that polls the Country Fire Authority (CFA
 
 ---
 
+## Quick Start
+
+Start from a fresh server:
+
+```bash
+git clone https://github.com/agillam69/pmon-input.git
+cd pmon-input
+chmod +x scripts/install-pm2.sh
+./scripts/install-pm2.sh
+```
+
+Then open the web UI at `http://<server-ip>:8585` and set your **PagerMon API key**.
+
+On Windows:
+
+```powershell
+git clone https://github.com/agillam69/pmon-input.git
+Set-Location pmon-input
+.\scripts\install.ps1
+```
+
+---
+
 ## Architecture & Data Flow
 
 ```
