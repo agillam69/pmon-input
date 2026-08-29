@@ -33,7 +33,7 @@ if (-not (Test-Path ".env")) {
     (Get-Content ".env") -replace '^DRY_RUN=false$', 'DRY_RUN=true' | Set-Content ".env"
     Write-Host "[!] The bridge is running in dry-run mode." -ForegroundColor Yellow
     Write-Host "    Set your PAGERMON_API_KEY via the web UI at http://localhost:8585" -ForegroundColor Yellow
-    Write-Host "    or edit .env, then restart: pm2 restart cfa-pagermon-bridge" -ForegroundColor Yellow
+    Write-Host "    or edit .env, then restart: pm2 restart bridge" -ForegroundColor Yellow
 }
 
 # 5. Create logs directory
@@ -69,6 +69,6 @@ Write-Host ""
 Write-Host "=== Setup Complete ===" -ForegroundColor Cyan
 Write-Host "Web UI:     http://localhost:8585" -ForegroundColor White
 Write-Host "Status:     pm2 status" -ForegroundColor Green
-Write-Host "Logs:       pm2 logs cfa-pagermon-bridge" -ForegroundColor Green
-Write-Host "Stop:       pm2 stop cfa-pagermon-bridge" -ForegroundColor Green
-Write-Host "Restart:    pm2 restart cfa-pagermon-bridge" -ForegroundColor Green
+Write-Host "Logs:       pm2 logs bridge" -ForegroundColor Green
+Write-Host "Stop:       pm2 stop bridge" -ForegroundColor Green
+Write-Host "Restart:    pm2 restart bridge" -ForegroundColor Green

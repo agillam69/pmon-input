@@ -7,7 +7,7 @@ Write-Host "=== CFA-PagerMon Bridge Status ===" -ForegroundColor Cyan
 # 1. PM2 Status
 if (Get-Command pm2 -ErrorAction SilentlyContinue) {
     Write-Host "`n-- PM2 Process Status --" -ForegroundColor Yellow
-    pm2 status cfa-pagermon-bridge
+    pm2 status bridge
 }
 
 # 2. State Database Counts

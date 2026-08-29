@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "cfa-pagermon-bridge",
+      name: "bridge",
       // Use platform-specific Python interpreter inside the venv.
       script: process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python",
       args: "-m src.cfa_pagermon_bridge.main",

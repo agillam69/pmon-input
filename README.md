@@ -126,7 +126,7 @@ Configuration is loaded from environment variables or a `.env` file.
 5. **Check logs & status:**
    ```powershell
    pm2 status
-   pm2 logs cfa-pagermon-bridge
+   pm2 logs bridge
    ```
 
 ---
