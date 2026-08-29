@@ -15,6 +15,7 @@ from .fetcher import Fetcher
 from .pagermon import PagerMonClient
 from .parser import parse_messages
 from .store import MessageStore
+from .webui import start_webui, update_shared_state
 
 logger = logging.getLogger("cfa_pagermon_bridge")
 
@@ -145,6 +146,14 @@ def run_service(cfg: Config) -> int:
     fetcher = Fetcher(cfg)
     client = PagerMonClient(cfg)
 
+    # Start web UI (dashboard, setup, config, verification)
+    webui_thread = start_webui(cfg, store)
+
+    update_shared_state(
+        service_state="dry_run" if cfg.dry_run else "running",
+        started_at=time.time(),
+    )
+
     last_valid_seen = time.time()
     last_poll_time = 0.0
 
@@ -165,6 +174,15 @@ def run_service(cfg: Config) -> int:
 
             # 1. Fetch source
             fetch_res = fetcher.fetch()
+
+            update_shared_state(
+                last_fetch_time=time.time(),
+                last_fetch_status="ok" if fetch_res.success else f"error: {fetch_res.error}",
+                last_fetch_duration_ms=fetch_res.duration_ms,
+                last_fetch_messages_found=None,
+                counts=store.get_counts(),
+            )
+
             if not fetch_res.success:
                 logger.warning(
                     "Fetch failed (duration=%.1fms, consecutive_failures=%d): %s",
@@ -213,6 +231,12 @@ def run_service(cfg: Config) -> int:
                 len(messages),
                 len(messages),
                 new_count,
+            )
+
+            update_shared_state(
+                last_fetch_status="ok",
+                last_fetch_messages_found=len(messages),
+                counts=store.get_counts(),
             )
 
             # 4. Deliver pending queue
@@ -269,9 +293,14 @@ def run_service(cfg: Config) -> int:
 
     finally:
         logger.info("Shutting down cleanly. Closing database and network connections...")
+        update_shared_state(service_state="stopped")
         client.close()
         fetcher.close()
         store.close()
+        if webui_thread is not None:
+            # Flask's Werkzeug server does not have a clean shutdown from a thread,
+            # so we let the process tear-down handle it.
+            pass
         logger.info("Service stopped gracefully.")
 
     return 0

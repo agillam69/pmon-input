@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 3rem auto;">
+  <h1 class="page-title" style="text-align: center;">Web UI Login</h1>
+
+  <div class="card">
+    <form method="post" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" name="password" id="password" required autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
+    </form>
+  </div>
+
+  <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;">
+    Login is only required when <code>WEBUI_PASSWORD</code> is set.
+  </p>
+</div>
+{% endblock %}

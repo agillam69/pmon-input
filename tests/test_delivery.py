@@ -29,6 +29,10 @@ def cfg() -> Config:
         max_message_length=2000,
         no_message_warning_seconds=600,
         dry_run=False,
+        webui_enabled=False,
+        webui_host="0.0.0.0",
+        webui_port=8585,
+        webui_password="",
     )
 
 

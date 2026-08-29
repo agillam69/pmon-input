@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CFA → PagerMon Bridge{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a1a2e; --bg-card: #16213e; --bg-nav: #0f3460;
+      --text: #e0e0e0; --text-muted: #8892a4; --border: #2a3a5c;
+      --red: #dc3545; --green: #28a745; --yellow: #ffc107; --blue: #17a2b8;
+      --red-bg: #2d1b1e; --green-bg: #1b2d1e; --yellow-bg: #2d2b1b; --blue-bg: #1b2529;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+    a { color: var(--blue); text-decoration: none; } a:hover { text-decoration: underline; }
+
+    /* Nav */
+    .navbar { background: var(--bg-nav); padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .navbar-brand { font-size: 1.25rem; font-weight: 700; color: #fff; }
+    .navbar-brand span { color: var(--red); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .nav-links a { color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; background: rgba(255,255,255,0.08); text-decoration: none; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 0.2em 0.6em; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge-success { background: var(--green); color: #fff; }
+    .badge-warning { background: var(--yellow); color: #000; }
+    .badge-danger { background: var(--red); color: #fff; }
+    .badge-info { background: var(--blue); color: #fff; }
+    .badge-secondary { background: var(--text-muted); color: #fff; }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; flex: 1; }
+    .page-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+
+    /* Cards */
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+    .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { text-align: center; padding: 1.25rem; }
+    .stat-value { font-size: 2.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .stat-pending .stat-value { color: var(--yellow); }
+    .stat-delivered .stat-value { color: var(--green); }
+    .stat-dead .stat-value { color: var(--red); }
+
+    /* Tables */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .table tr:hover { background: rgba(255,255,255,0.03); }
+    .table .mono { font-family: 'SF Mono', 'Consolas', monospace; font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-warning { background: var(--yellow); color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+    .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    /* Forms */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; font-size: 0.9rem; }
+    .form-group .help-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .form-control { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; font-family: inherit; }
+    .form-control:focus { outline: none; border-color: var(--blue); }
+    select.form-control { appearance: auto; }
+    input[type="checkbox"] { width: auto; margin-right: 0.5rem; }
+    fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    legend { font-weight: 600; padding: 0 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Alerts */
+    .alert { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+    .alert-success { background: var(--green-bg); border: 1px solid var(--green); color: var(--green); }
+    .alert-danger { background: var(--red-bg); border: 1px solid var(--red); color: #f5a0a8; }
+    .alert-warning { background: var(--yellow-bg); border: 1px solid var(--yellow); color: var(--yellow); }
+    .alert-info { background: var(--blue-bg); border: 1px solid var(--blue); color: var(--blue); }
+
+    /* Filter tabs */
+    .filter-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filter-tab { padding: 0.4rem 1rem; border-radius: 6px; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border); font-size: 0.85rem; }
+    .filter-tab:hover { color: var(--text); text-decoration: none; }
+    .filter-tab.active { background: var(--bg-nav); color: #fff; border-color: var(--blue); }
+
+    /* Pagination */
+    .pagination { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: center; }
+
+    /* Pre block */
+    .pre-block { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; font-family: 'SF Mono', 'Consolas', monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all; overflow-x: auto; }
+
+    /* Footer */
+    .footer { text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .navbar { gap: 0.75rem; }
+      .table { font-size: 0.85rem; }
+      .table th, .table td { padding: 0.4rem; }
+    }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; }
+    .info-grid dt { color: var(--text-muted); font-size: 0.85rem; }
+    .info-grid dd { font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand"><span>CFA</span> → PagerMon Bridge</div>
+    {% if not needs_setup %}
+    <div class="nav-links">
+      <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('messages_page') }}" class="{% if request.endpoint in ('messages_page', 'message_detail') %}active{% endif %}">Messages</a>
+      <a href="{{ url_for('config_page') }}" class="{% if request.endpoint == 'config_page' %}active{% endif %}">Configuration</a>
+    </div>
+    {% endif %}
+    <div class="nav-right">
+      {% if service_state == 'running' %}
+        <span class="badge badge-success">Running</span>
+      {% elif service_state == 'dry_run' %}
+        <span class="badge badge-warning">Dry Run</span>
+      {% elif service_state == 'setup_required' %}
+        <span class="badge badge-info">Setup Required</span>
+      {% else %}
+        <span class="badge badge-secondary">{{ service_state }}</span>
+      {% endif %}
+      {% if auth_required %}
+        <form action="{{ url_for('logout') }}" method="post" style="display:inline;">
+          <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+        </form>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="footer">
+    CFA → PagerMon Bridge v{{ version }}
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

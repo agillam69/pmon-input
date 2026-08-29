@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Setup — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+  <h1 class="page-title">Initial Setup</h1>
+  <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+    Welcome! Configure the bridge to connect to your PagerMon instance. Fields marked * are required.
+  </p>
+
+  <form method="post" action="{{ url_for('setup') }}">
+
+    <fieldset>
+      <legend>PagerMon Connection</legend>
+      <div class="form-group">
+        <label for="PAGERMON_BASE_URL">PagerMon Base URL *</label>
+        <input type="text" class="form-control" name="PAGERMON_BASE_URL" id="PAGERMON_BASE_URL"
+               value="http://127.0.0.1:3000" required>
+        <div class="help-text">The URL of your running PagerMon server (e.g. http://127.0.0.1:3000)</div>
+      </div>
+      <div class="form-group">
+        <label for="PAGERMON_API_KEY">PagerMon API Key *</label>
+        <input type="password" class="form-control" name="PAGERMON_API_KEY" id="PAGERMON_API_KEY"
+               placeholder="Paste your API key from PagerMon config" required>
+        <div class="help-text">Found in PagerMon's server/config/config.json under auth.keys</div>
+      </div>
+      <div class="form-group">
+        <label for="PAGERMON_ADDRESS">Capcode / Address</label>
+        <input type="text" class="form-control" name="PAGERMON_ADDRESS" id="PAGERMON_ADDRESS"
+               value="9990001">
+        <div class="help-text">Dedicated address for CFA dispatches in PagerMon</div>
+      </div>
+      <div class="form-group">
+        <label for="PAGERMON_SOURCE">Source Identifier</label>
+        <input type="text" class="form-control" name="PAGERMON_SOURCE" id="PAGERMON_SOURCE"
+               value="mazzanet-cfa">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Source Feed</legend>
+      <div class="form-group">
+        <label for="CFA_SOURCE_URL">CFA Source URL</label>
+        <input type="text" class="form-control" name="CFA_SOURCE_URL" id="CFA_SOURCE_URL"
+               value="https://mazzanet.net.au/cfa/?reg=state&amp;magickey=cfastream">
+      </div>
+      <div class="form-group">
+        <label for="POLL_INTERVAL_SECONDS">Poll Interval (seconds)</label>
+        <input type="number" class="form-control" name="POLL_INTERVAL_SECONDS" id="POLL_INTERVAL_SECONDS"
+               value="20" min="5">
+        <div class="help-text">How often to check for new dispatches (minimum 5 seconds)</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Options</legend>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="DRY_RUN" value="true" checked>
+          Start in Dry Run mode (recommended for first run)
+        </label>
+        <div class="help-text">Fetches and deduplicates messages but does NOT send them to PagerMon. Disable once you've verified the connection.</div>
+      </div>
+      <div class="form-group">
+        <label for="LOG_LEVEL">Log Level</label>
+        <select class="form-control" name="LOG_LEVEL" id="LOG_LEVEL">
+          <option value="DEBUG">DEBUG</option>
+          <option value="INFO" selected>INFO</option>
+          <option value="WARNING">WARNING</option>
+          <option value="ERROR">ERROR</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Web UI Security (optional)</legend>
+      <div class="form-group">
+        <label for="WEBUI_PASSWORD">Admin Password</label>
+        <input type="password" class="form-control" name="WEBUI_PASSWORD" id="WEBUI_PASSWORD"
+               placeholder="Leave empty for no auth on localhost">
+        <div class="help-text">Set a password to protect the web UI when accessible from the network</div>
+      </div>
+    </fieldset>
+
+    <!-- Hidden defaults -->
+    <input type="hidden" name="HTTP_CONNECT_TIMEOUT_SECONDS" value="5">
+    <input type="hidden" name="HTTP_READ_TIMEOUT_SECONDS" value="15">
+    <input type="hidden" name="MAX_RESPONSE_BYTES" value="2097152">
+    <input type="hidden" name="USER_AGENT" value="CFA-PagerMon-Bridge/1.0">
+    <input type="hidden" name="STATE_DB_PATH" value="data/state.sqlite3">
+    <input type="hidden" name="MAX_DELIVERY_ATTEMPTS" value="20">
+    <input type="hidden" name="MAX_MESSAGE_LENGTH" value="2000">
+    <input type="hidden" name="NO_MESSAGE_WARNING_SECONDS" value="600">
+    <input type="hidden" name="WEBUI_ENABLED" value="true">
+    <input type="hidden" name="WEBUI_HOST" value="0.0.0.0">
+    <input type="hidden" name="WEBUI_PORT" value="8585">
+
+    <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.75rem; font-size: 1rem;">
+      Save &amp; Start Bridge
+    </button>
+  </form>
+</div>
+{% endblock %}

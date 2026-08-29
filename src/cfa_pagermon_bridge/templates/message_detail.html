@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Message Detail — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Message Detail</h1>
+
+<div class="card">
+  <div class="info-grid">
+    <dt>Hash</dt>
+    <dd class="mono">{{ message.message_hash }}</dd>
+
+    <dt>Identifier</dt>
+    <dd>{{ message.identifier }}</dd>
+
+    <dt>State</dt>
+    <dd>
+      {% if message.delivery_state == 'delivered' %}<span class="badge badge-success">Delivered</span>
+      {% elif message.delivery_state == 'pending' %}<span class="badge badge-warning">Pending</span>
+      {% elif message.delivery_state == 'dead_letter' %}<span class="badge badge-danger">Dead Letter</span>
+      {% else %}<span class="badge badge-secondary">{{ message.delivery_state }}</span>{% endif %}
+    </dd>
+
+    <dt>First Seen</dt>
+    <dd>{{ message.first_seen_utc|format_ts }}</dd>
+
+    <dt>Dispatch Date/Time</dt>
+    <dd>{{ message.dispatch_date or '—' }} {{ message.dispatch_time or '' }}</dd>
+
+    <dt>Attempts</dt>
+    <dd>{{ message.attempt_count }}</dd>
+
+    <dt>Last Attempt</dt>
+    <dd>{{ message.last_attempt_utc|format_ts }}</dd>
+
+    <dt>Next Attempt</dt>
+    <dd>{{ message.next_attempt_utc|format_ts }}</dd>
+
+    <dt>Delivered At</dt>
+    <dd>{{ message.delivered_utc|format_ts }}</dd>
+
+    <dt>Last Error Category</dt>
+    <dd>{{ message.last_error_category or '—' }}</dd>
+  </div>
+
+  {% if message.last_error_desc %}
+  <div style="margin-top: 1rem;">
+    <div class="card-title" style="margin-bottom: 0.5rem;">Last Error</div>
+    <div class="pre-block">{{ message.last_error_desc }}</div>
+  </div>
+  {% endif %}
+
+  <div style="margin-top: 1.5rem;">
+    <div class="card-title" style="margin-bottom: 0.5rem;">Message Text</div>
+    <div class="pre-block">{{ message.message_text }}</div>
+  </div>
+</div>
+
+<div class="btn-group" style="margin-top: 1rem;">
+  <a href="{{ url_for('messages_page') }}" class="btn btn-outline">Back to Messages</a>
+</div>
+{% endblock %}

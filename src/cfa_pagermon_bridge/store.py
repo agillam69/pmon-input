@@ -240,3 +240,82 @@ class MessageStore:
             (message_hash,),
         ).fetchone()
         return row is not None
+
+    def get_messages(
+        self,
+        state: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[dict]:
+        """Return messages with optional state filter, newest first.
+
+        Each message is returned as a dict with all stored columns.
+        """
+        assert self._conn is not None
+        if state:
+            rows = self._conn.execute(
+                """SELECT message_hash, message_text, identifier,
+                          first_seen_utc, dispatch_time, dispatch_date,
+                          delivery_state, attempt_count, next_attempt_utc,
+                          last_attempt_utc, delivered_utc,
+                          last_error_category, last_error_desc
+                   FROM messages
+                   WHERE delivery_state = ?
+                   ORDER BY first_seen_utc DESC
+                   LIMIT ? OFFSET ?""",
+                (state, limit, offset),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """SELECT message_hash, message_text, identifier,
+                          first_seen_utc, dispatch_time, dispatch_date,
+                          delivery_state, attempt_count, next_attempt_utc,
+                          last_attempt_utc, delivered_utc,
+                          last_error_category, last_error_desc
+                   FROM messages
+                   ORDER BY first_seen_utc DESC
+                   LIMIT ? OFFSET ?""",
+                (limit, offset),
+            ).fetchall()
+        return [self._row_to_dict(r) for r in rows]
+
+    def get_message_by_hash(self, message_hash: str) -> dict | None:
+        """Return a single message by its hash, or None."""
+        assert self._conn is not None
+        row = self._conn.execute(
+            """SELECT message_hash, message_text, identifier,
+                      first_seen_utc, dispatch_time, dispatch_date,
+                      delivery_state, attempt_count, next_attempt_utc,
+                      last_attempt_utc, delivered_utc,
+                      last_error_category, last_error_desc
+               FROM messages
+               WHERE message_hash = ?""",
+            (message_hash,),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_dict(row)
+
+    def get_recent(self, limit: int = 10) -> list[dict]:
+        """Return the most recent messages regardless of state."""
+        return self.get_messages(state=None, limit=limit, offset=0)
+
+    @staticmethod
+    def _row_to_dict(row: tuple) -> dict:
+        """Convert a raw database row to a dictionary."""
+        return {
+            "message_hash": row[0],
+            "message_text": row[1],
+            "identifier": row[2],
+            "first_seen_utc": row[3],
+            "dispatch_time": row[4],
+            "dispatch_date": row[5],
+            "delivery_state": row[6],
+            "attempt_count": row[7],
+            "next_attempt_utc": row[8],
+            "last_attempt_utc": row[9],
+            "delivered_utc": row[10],
+            "last_error_category": row[11],
+            "last_error_desc": row[12],
+        }
+

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Messages — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Messages</h1>
+
+<div class="filter-tabs">
+  <a href="{{ url_for('messages_page', state='all') }}" class="filter-tab {% if current_filter == 'all' %}active{% endif %}">All</a>
+  <a href="{{ url_for('messages_page', state='pending') }}" class="filter-tab {% if current_filter == 'pending' %}active{% endif %}">Pending</a>
+  <a href="{{ url_for('messages_page', state='delivered') }}" class="filter-tab {% if current_filter == 'delivered' %}active{% endif %}">Delivered</a>
+  <a href="{{ url_for('messages_page', state='dead_letter') }}" class="filter-tab {% if current_filter == 'dead_letter' %}active{% endif %}">Dead Letter</a>
+</div>
+
+<div class="card">
+  {% if messages %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>First Seen</th>
+        <th>Identifier</th>
+        <th>State</th>
+        <th>Attempts</th>
+        <th>Hash</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in messages %}
+      <tr>
+        <td>{{ msg.first_seen_utc|format_ts }}</td>
+        <td><strong>{{ msg.identifier }}</strong></td>
+        <td>
+          {% if msg.delivery_state == 'delivered' %}<span class="badge badge-success">Delivered</span>
+          {% elif msg.delivery_state == 'pending' %}<span class="badge badge-warning">Pending</span>
+          {% elif msg.delivery_state == 'dead_letter' %}<span class="badge badge-danger">Dead Letter</span>
+          {% else %}<span class="badge badge-secondary">{{ msg.delivery_state }}</span>{% endif %}
+        </td>
+        <td>{{ msg.attempt_count }}</td>
+        <td>
+          <a href="{{ url_for('message_detail', message_hash=msg.message_hash) }}" class="mono">
+            {{ msg.message_hash|short_hash }}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted);">No messages found for this filter.</p>
+  {% endif %}
+</div>
+
+{% if messages %}
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="{{ url_for('messages_page', state=current_filter, page=page-1) }}" class="btn btn-outline btn-sm">← Previous</a>
+  {% endif %}
+  <span style="padding: 0.3rem 0.75rem; color: var(--text-muted);">Page {{ page }}</span>
+  {% if has_next %}
+    <a href="{{ url_for('messages_page', state=current_filter, page=page+1) }}" class="btn btn-outline btn-sm">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

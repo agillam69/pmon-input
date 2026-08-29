@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Dashboard</h1>
+
+<!-- Stats -->
+<div class="stats-grid" id="stats-grid">
+  <div class="card stat-card stat-pending">
+    <div class="stat-value" id="stat-pending">{{ counts.pending }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+  <div class="card stat-card stat-delivered">
+    <div class="stat-value" id="stat-delivered">{{ counts.delivered }}</div>
+    <div class="stat-label">Delivered</div>
+  </div>
+  <div class="card stat-card stat-dead">
+    <div class="stat-value" id="stat-dead">{{ counts.dead_letter }}</div>
+    <div class="stat-label">Dead Letter</div>
+  </div>
+</div>
+
+<!-- Service Status -->
+<div class="card">
+  <div class="card-title">Service Status</div>
+  <div class="info-grid">
+    <dt>State</dt>
+    <dd id="svc-state">
+      {% if service_state == 'running' %}<span class="badge badge-success">Running</span>
+      {% elif service_state == 'dry_run' %}<span class="badge badge-warning">Dry Run</span>
+      {% else %}<span class="badge badge-secondary">{{ service_state }}</span>{% endif %}
+    </dd>
+    <dt>Uptime</dt>
+    <dd id="svc-uptime">{{ uptime or '—' }}</dd>
+    <dt>Last Fetch</dt>
+    <dd id="svc-fetch-time">{{ last_fetch.time }}</dd>
+    <dt>Fetch Status</dt>
+    <dd id="svc-fetch-status">{{ last_fetch.status or '—' }}</dd>
+    <dt>Fetch Duration</dt>
+    <dd id="svc-fetch-duration">{% if last_fetch.duration_ms is not none %}{{ "%.0f"|format(last_fetch.duration_ms) }}ms{% else %}—{% endif %}</dd>
+    <dt>Messages Found</dt>
+    <dd id="svc-fetch-msgs">{{ last_fetch.messages_found if last_fetch.messages_found is not none else '—' }}</dd>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="card">
+  <div class="card-title">Actions</div>
+  <div class="btn-group">
+    <button class="btn btn-primary" id="btn-check" onclick="runCheck()">Run Check</button>
+    <form action="{{ url_for('api_toggle_dry_run') }}" method="post" style="display:inline;">
+      <button type="submit" class="btn btn-warning">
+        {% if service_state == 'dry_run' %}Disable{% else %}Enable{% endif %} Dry Run
+      </button>
+    </form>
+    <form action="{{ url_for('api_test_delivery') }}" method="post" style="display:inline;"
+          onsubmit="return confirm('Send a test message to PagerMon?');">
+      <button type="submit" class="btn btn-danger">Send Test Message</button>
+    </form>
+  </div>
+  <div id="check-results" style="margin-top: 1rem; display: none;"></div>
+</div>
+
+<!-- Recent Messages -->
+<div class="card">
+  <div class="card-title">Recent Messages</div>
+  {% if recent_messages %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>ID</th>
+        <th>Status</th>
+        <th>Hash</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in recent_messages %}
+      <tr>
+        <td>{{ msg.dispatch_date or '' }} {{ msg.dispatch_time or '' }}</td>
+        <td><strong>{{ msg.identifier }}</strong></td>
+        <td>
+          {% if msg.delivery_state == 'delivered' %}<span class="badge badge-success">Delivered</span>
+          {% elif msg.delivery_state == 'pending' %}<span class="badge badge-warning">Pending</span>
+          {% elif msg.delivery_state == 'dead_letter' %}<span class="badge badge-danger">Dead Letter</span>
+          {% else %}<span class="badge badge-secondary">{{ msg.delivery_state }}</span>{% endif %}
+        </td>
+        <td><a href="{{ url_for('message_detail', message_hash=msg.message_hash) }}" class="mono">{{ msg.message_hash|short_hash }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted);">No messages yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh status every 15 seconds
+setInterval(function() {
+  fetch('{{ url_for("api_status") }}')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('stat-pending').textContent = data.counts.pending;
+      document.getElementById('stat-delivered').textContent = data.counts.delivered;
+      document.getElementById('stat-dead').textContent = data.counts.dead_letter;
+      document.getElementById('svc-uptime').textContent = data.uptime || '—';
+      document.getElementById('svc-fetch-time').textContent = data.last_fetch.time || '—';
+      document.getElementById('svc-fetch-status').textContent = data.last_fetch.status || '—';
+      document.getElementById('svc-fetch-duration').textContent = data.last_fetch.duration_ms ? Math.round(data.last_fetch.duration_ms) + 'ms' : '—';
+      document.getElementById('svc-fetch-msgs').textContent = data.last_fetch.messages_found !== null ? data.last_fetch.messages_found : '—';
+    })
+    .catch(() => {});
+}, 15000);
+
+function runCheck() {
+  const btn = document.getElementById('btn-check');
+  const results = document.getElementById('check-results');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  results.style.display = 'block';
+  results.innerHTML = '<p style="color:var(--text-muted);">Running diagnostics...</p>';
+
+  fetch('{{ url_for("api_check") }}', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      let html = '';
+      data.results.forEach(r => {
+        let cls = r.status === 'ok' ? 'alert-success' : (r.status === 'warn' ? 'alert-warning' : 'alert-danger');
+        let icon = r.status === 'ok' ? '✓' : (r.status === 'warn' ? '⚠' : '✗');
+        html += `<div class="alert ${cls}" style="padding:0.5rem 0.75rem;margin-bottom:0.5rem;">${icon} <strong>${r.check}:</strong> ${r.message}</div>`;
+      });
+      results.innerHTML = html;
+      btn.disabled = false;
+      btn.textContent = 'Run Check';
+    })
+    .catch(err => {
+      results.innerHTML = `<div class="alert alert-danger">Check failed: ${err}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Run Check';
+    });
+}
+</script>
+{% endblock %}

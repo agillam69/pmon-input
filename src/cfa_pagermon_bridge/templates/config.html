@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Configuration — CFA → PagerMon Bridge{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Configuration</h1>
+
+<form method="post" action="{{ url_for('config_page') }}">
+
+  <fieldset>
+    <legend>PagerMon Connection</legend>
+    <div class="form-group">
+      <label for="PAGERMON_BASE_URL">PagerMon Base URL</label>
+      <input type="text" class="form-control" name="PAGERMON_BASE_URL" id="PAGERMON_BASE_URL"
+             value="{{ config.PAGERMON_BASE_URL }}" required>
+    </div>
+    <div class="form-group">
+      <label for="PAGERMON_API_KEY">PagerMon API Key</label>
+      <input type="password" class="form-control" name="PAGERMON_API_KEY" id="PAGERMON_API_KEY"
+             value="{{ config.PAGERMON_API_KEY }}" required>
+      <div class="help-text">From PagerMon's server/config/config.json under auth.keys</div>
+    </div>
+    <div class="form-group">
+      <label for="PAGERMON_ADDRESS">Capcode / Address</label>
+      <input type="text" class="form-control" name="PAGERMON_ADDRESS" id="PAGERMON_ADDRESS"
+             value="{{ config.PAGERMON_ADDRESS }}" required>
+    </div>
+    <div class="form-group">
+      <label for="PAGERMON_SOURCE">Source Identifier</label>
+      <input type="text" class="form-control" name="PAGERMON_SOURCE" id="PAGERMON_SOURCE"
+             value="{{ config.PAGERMON_SOURCE }}" required>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>CFA Source</legend>
+    <div class="form-group">
+      <label for="CFA_SOURCE_URL">CFA Source URL</label>
+      <input type="text" class="form-control" name="CFA_SOURCE_URL" id="CFA_SOURCE_URL"
+             value="{{ config.CFA_SOURCE_URL }}" required>
+    </div>
+    <div class="form-group">
+      <label for="POLL_INTERVAL_SECONDS">Poll Interval (seconds)</label>
+      <input type="number" class="form-control" name="POLL_INTERVAL_SECONDS" id="POLL_INTERVAL_SECONDS"
+             value="{{ config.POLL_INTERVAL_SECONDS }}" min="5" required>
+    </div>
+    <div class="form-group">
+      <label for="HTTP_CONNECT_TIMEOUT_SECONDS">Connect Timeout (seconds)</label>
+      <input type="number" class="form-control" name="HTTP_CONNECT_TIMEOUT_SECONDS" id="HTTP_CONNECT_TIMEOUT_SECONDS"
+             value="{{ config.HTTP_CONNECT_TIMEOUT_SECONDS }}" min="1" required>
+    </div>
+    <div class="form-group">
+      <label for="HTTP_READ_TIMEOUT_SECONDS">Read Timeout (seconds)</label>
+      <input type="number" class="form-control" name="HTTP_READ_TIMEOUT_SECONDS" id="HTTP_READ_TIMEOUT_SECONDS"
+             value="{{ config.HTTP_READ_TIMEOUT_SECONDS }}" min="1" required>
+    </div>
+    <div class="form-group">
+      <label for="MAX_RESPONSE_BYTES">Max Response Bytes</label>
+      <input type="number" class="form-control" name="MAX_RESPONSE_BYTES" id="MAX_RESPONSE_BYTES"
+             value="{{ config.MAX_RESPONSE_BYTES }}" min="1024" required>
+    </div>
+    <div class="form-group">
+      <label for="USER_AGENT">User-Agent</label>
+      <input type="text" class="form-control" name="USER_AGENT" id="USER_AGENT"
+             value="{{ config.USER_AGENT }}" required>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>State &amp; Behaviour</legend>
+    <div class="form-group">
+      <label for="STATE_DB_PATH">State Database Path</label>
+      <input type="text" class="form-control" name="STATE_DB_PATH" id="STATE_DB_PATH"
+             value="{{ config.STATE_DB_PATH }}" required>
+    </div>
+    <div class="form-group">
+      <label for="MAX_DELIVERY_ATTEMPTS">Max Delivery Attempts</label>
+      <input type="number" class="form-control" name="MAX_DELIVERY_ATTEMPTS" id="MAX_DELIVERY_ATTEMPTS"
+             value="{{ config.MAX_DELIVERY_ATTEMPTS }}" min="1" required>
+    </div>
+    <div class="form-group">
+      <label for="MAX_MESSAGE_LENGTH">Max Message Length</label>
+      <input type="number" class="form-control" name="MAX_MESSAGE_LENGTH" id="MAX_MESSAGE_LENGTH"
+             value="{{ config.MAX_MESSAGE_LENGTH }}" min="100" required>
+    </div>
+    <div class="form-group">
+      <label for="NO_MESSAGE_WARNING_SECONDS">No-Message Warning (seconds)</label>
+      <input type="number" class="form-control" name="NO_MESSAGE_WARNING_SECONDS" id="NO_MESSAGE_WARNING_SECONDS"
+             value="{{ config.NO_MESSAGE_WARNING_SECONDS }}" min="0" required>
+    </div>
+    <div class="form-group">
+      <label for="LOG_LEVEL">Log Level</label>
+      <select class="form-control" name="LOG_LEVEL" id="LOG_LEVEL">
+        <option value="DEBUG" {% if config.LOG_LEVEL == 'DEBUG' %}selected{% endif %}>DEBUG</option>
+        <option value="INFO" {% if config.LOG_LEVEL == 'INFO' %}selected{% endif %}>INFO</option>
+        <option value="WARNING" {% if config.LOG_LEVEL == 'WARNING' %}selected{% endif %}>WARNING</option>
+        <option value="ERROR" {% if config.LOG_LEVEL == 'ERROR' %}selected{% endif %}>ERROR</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="DRY_RUN" value="true" {% if config.DRY_RUN == 'true' %}checked{% endif %}>
+        Dry Run Mode
+      </label>
+      <div class="help-text">Fetches and deduplicates messages but does NOT send them to PagerMon.</div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Web UI</legend>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="WEBUI_ENABLED" value="true" {% if config.WEBUI_ENABLED == 'true' %}checked{% endif %}>
+        Enable Web UI
+      </label>
+    </div>
+    <div class="form-group">
+      <label for="WEBUI_HOST">Web UI Host</label>
+      <input type="text" class="form-control" name="WEBUI_HOST" id="WEBUI_HOST"
+             value="{{ config.WEBUI_HOST }}" required>
+    </div>
+    <div class="form-group">
+      <label for="WEBUI_PORT">Web UI Port</label>
+      <input type="number" class="form-control" name="WEBUI_PORT" id="WEBUI_PORT"
+             value="{{ config.WEBUI_PORT }}" min="1" max="65535" required>
+    </div>
+    <div class="form-group">
+      <label for="WEBUI_PASSWORD">Admin Password</label>
+      <input type="password" class="form-control" name="WEBUI_PASSWORD" id="WEBUI_PASSWORD"
+             value="{{ config.WEBUI_PASSWORD }}" placeholder="Leave empty for no auth on localhost">
+      <div class="help-text">Set a password to protect the web UI from remote access.</div>
+    </div>
+  </fieldset>
+
+  <div class="btn-group">
+    <button type="submit" class="btn btn-success">Save Configuration</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+  </div>
+
+</form>
+{% endblock %}
