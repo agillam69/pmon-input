@@ -19,10 +19,10 @@ if [ ! -d "$PROJECT_DIR/.venv" ]; then
     python3 -m venv "$PROJECT_DIR/.venv"
 fi
 
-# 3. Install dependencies
+# 3. Install dependencies (runtime + dev/test tools)
 echo "Installing dependencies..."
 "$PROJECT_DIR/.venv/bin/pip" install --upgrade pip
-"$PROJECT_DIR/.venv/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
+"$PROJECT_DIR/.venv/bin/pip" install -r "$PROJECT_DIR/requirements-dev.txt"
 
 # 4. Create logs directory
 mkdir -p "$PROJECT_DIR/logs"
